@@ -1,0 +1,244 @@
+<!-- register.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - RewardHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-transition-overlay"></div>
+    
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fas fa-gift"></i>
+            <span>RewardHub</span>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="login.html">Login</a>
+        </div>
+    </nav>
+
+    <main class="auth-page">
+        <div class="auth-container">
+            <div class="auth-card glass">
+                <div class="auth-header">
+                    <h1>Create Account</h1>
+                    <p>Join RewardHub and start earning today</p>
+                </div>
+                
+                <form id="register-form" class="auth-form">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Full Name</label>
+                        <input type="text" id="reg-name" required placeholder="Enter your full name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" id="reg-email" required placeholder="Enter your email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Password</label>
+                        <div class="password-input">
+                            <input type="password" id="reg-password" required placeholder="Create password (min 6 chars)" minlength="6">
+                            <button type="button" class="toggle-password" onclick="togglePassword('reg-password', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Confirm Password</label>
+                        <div class="password-input">
+                            <input type="password" id="reg-confirm" required placeholder="Confirm password">
+                            <button type="button" class="toggle-password" onclick="togglePassword('reg-confirm', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="reg-terms" required>
+                            <span class="checkmark"></span>
+                            I agree to the Terms & Conditions
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn-glow btn-full">
+                        <span class="btn-text">Create Account</span>
+                        <span class="btn-loader hidden"><i class="fas fa-spinner fa-spin"></i></span>
+                    </button>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="login.html">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Verification Modal -->
+    <div id="verify-modal" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2><i class="fas fa-shield-alt"></i> Verify Email</h2>
+                <button class="modal-close" onclick="closeVerifyModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Enter the 6-digit code sent to your email</p>
+                <div class="code-inputs">
+                    <input type="text" maxlength="1" class="code-input" data-index="0">
+                    <input type="text" maxlength="1" class="code-input" data-index="1">
+                    <input type="text" maxlength="1" class="code-input" data-index="2">
+                    <input type="text" maxlength="1" class="code-input" data-index="3">
+                    <input type="text" maxlength="1" class="code-input" data-index="4">
+                    <input type="text" maxlength="1" class="code-input" data-index="5">
+                </div>
+                <p class="code-hint">Code: <span id="display-code" class="highlight"></span></p>
+                <button onclick="verifyCode()" class="btn-glow btn-full">Verify Account</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let verificationCode = '';
+        let pendingUser = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Code input handling
+            const codeInputs = document.querySelectorAll('.code-input');
+            codeInputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && index < 5) {
+                        codeInputs[index + 1].focus();
+                    }
+                });
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        codeInputs[index - 1].focus();
+                    }
+                });
+            });
+
+            // Form submission
+            document.getElementById('register-form').addEventListener('submit', handleRegister);
+        });
+
+        function handleRegister(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const confirm = document.getElementById('reg-confirm').value;
+
+            // Validation
+            if (password !== confirm) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            // Check if email exists
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            if (users.find(u => u.email === email)) {
+                showToast('Email already registered', 'error');
+                return;
+            }
+
+            // Generate verification code
+            verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+            pendingUser = {
+                id: Date.now().toString(),
+                name,
+                email,
+                password,
+                points: 0,
+                verified: false,
+                referralCode: generateReferralCode(),
+                joinedAt: new Date().toISOString(),
+                lastBonusClaim: null,
+                referrals: []
+            };
+
+            // Show code in toast
+            showToast(`Verification code: ${verificationCode}`, 'info', 10000);
+            
+            // Show modal
+            document.getElementById('display-code').textContent = verificationCode;
+            document.getElementById('verify-modal').classList.add('active');
+            
+            // Focus first input
+            setTimeout(() => document.querySelector('.code-input').focus(), 100);
+        }
+
+        function verifyCode() {
+            const inputs = document.querySelectorAll('.code-input');
+            const enteredCode = Array.from(inputs).map(i => i.value).join('');
+            
+            if (enteredCode === verificationCode) {
+                // Save user
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                pendingUser.verified = true;
+                users.push(pendingUser);
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                // Check for referral
+                const urlParams = new URLSearchParams(window.location.search);
+                const refCode = urlParams.get('ref');
+                if (refCode) {
+                    processReferral(refCode, pendingUser.id);
+                }
+                
+                showToast('Account verified successfully!', 'success');
+                closeVerifyModal();
+                
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            } else {
+                showToast('Invalid verification code', 'error');
+                inputs.forEach(i => {
+                    i.value = '';
+                    i.classList.add('error');
+                });
+                setTimeout(() => inputs[0].focus(), 100);
+            }
+        }
+
+        function closeVerifyModal() {
+            document.getElementById('verify-modal').classList.remove('active');
+        }
+
+        function generateReferralCode() {
+            return 'RH' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        function processReferral(code, newUserId) {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const referrer = users.find(u => u.referralCode === code);
+            
+            if (referrer) {
+                referrer.points += 100;
+                referrer.referrals.push(newUserId);
+                localStorage.setItem('users', JSON.stringify(users));
+                showToast(`You were referred by ${referrer.name}!`, 'success');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RewardHub - Earn Rewards</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-transition-overlay"></div>
+    
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fas fa-gift"></i>
+            <span>RewardHub</span>
+        </div>
+        <div class="nav-links">
+            <a href="index.html" class="active">Home</a>
+            <a href="tasks.html">Tasks</a>
+            <a href="dashboard.html" class="auth-only hidden">Dashboard</a>
+            <a href="referral.html" class="auth-only hidden">Referral</a>
+            <a href="login.html" class="guest-only">Login</a>
+            <a href="register.html" class="guest-only btn-primary">Register</a>
+            <div class="user-menu auth-only hidden">
+                <span class="user-points"><i class="fas fa-coins"></i> <span id="nav-points">0</span></span>
+                <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
+
+    <main class="page-content">
+        <section class="hero">
+            <div class="hero-content">
+                <h1 class="glitch-text">Earn Rewards Daily</h1>
+                <p class="hero-subtitle">Complete simple tasks, invite friends, and withdraw instantly</p>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="total-users">0</span>
+                        <span class="stat-label">Active Users</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="total-earned">0</span>
+                        <span class="stat-label">Points Earned</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="total-tasks">0</span>
+                        <span class="stat-label">Tasks Completed</span>
+                    </div>
+                </div>
+                <div class="hero-cta">
+                    <a href="register.html" class="btn-glow btn-large">Start Earning Now</a>
+                    <a href="login.html" class="btn-outline btn-large">Already a Member?</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="floating-card card-1">
+                    <i class="fas fa-coins"></i>
+                    <span>+100 Points</span>
+                </div>
+                <div class="floating-card card-2">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Task Complete</span>
+                </div>
+                <div class="floating-card card-3">
+                    <i class="fas fa-gift"></i>
+                    <span>Bonus Ready</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <h2 class="section-title">How It Works</h2>
+            <div class="features-grid">
+                <div class="feature-card glass">
+                    <div class="feature-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <h3>Complete Tasks</h3>
+                    <p>Finish simple online tasks and earn points instantly</p>
+                </div>
+                <div class="feature-card glass">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Invite Friends</h3>
+                    <p>Earn 100 points for every friend who joins</p>
+                </div>
+                <div class="feature-card glass">
+                    <div class="feature-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <h3>Withdraw</h3>
+                    <p>Cash out via PayPal, Crypto, or Gift Cards</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="daily-bonus-section">
+            <div class="bonus-card glass">
+                <div class="bonus-header">
+                    <i class="fas fa-calendar-day"></i>
+                    <h2>Daily Bonus</h2>
+                </div>
+                <p class="bonus-amount">Claim <span class="highlight">50 Points</span> every 24 hours</p>
+                <div class="bonus-timer guest-only">
+                    <p>Login to claim your daily reward</p>
+                    <a href="login.html" class="btn-primary">Login Now</a>
+                </div>
+                <div class="bonus-timer auth-only hidden">
+                    <div id="daily-bonus-timer">Next bonus in: --:--:--</div>
+                    <button id="claim-bonus-btn" class="btn-glow" onclick="claimDailyBonus()">
+                        Claim Bonus
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast-container"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Page specific initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAuthUI();
+            initHomePage();
+        });
+
+        function initHomePage() {
+            // Animate stats
+            const users = JSON.parse(localStorage.getItem('users') || '[]').length;
+            const tasks = JSON.parse(localStorage.getItem('completedTasks') || '[]').length;
+            const earned = tasks * 100;
+            
+            animateNumber('total-users', users + 1500);
+            animateNumber('total-earned', earned + 50000);
+            animateNumber('total-tasks', tasks + 2500);
+        }
+
+        function animateNumber(id, target) {
+            const el = document.getElementById(id);
+            let current = 0;
+            const increment = target / 50;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                el.textContent = Math.floor(current).toLocaleString();
+            }, 30);
+        }
+    </script>
+</body>
+</html>

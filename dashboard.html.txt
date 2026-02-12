@@ -1,0 +1,305 @@
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - RewardHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-transition-overlay"></div>
+    
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fas fa-gift"></i>
+            <span>RewardHub</span>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="tasks.html">Tasks</a>
+            <a href="dashboard.html" class="active">Dashboard</a>
+            <a href="withdraw.html">Withdraw</a>
+            <a href="referral.html">Referral</a>
+            <div class="user-menu">
+                <span class="user-points"><i class="fas fa-coins"></i> <span id="nav-points">0</span></span>
+                <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
+
+    <main class="page-content dashboard-page">
+        <div class="dashboard-header">
+            <h1>Welcome back, <span id="user-name">User</span>!</h1>
+            <p class="last-login">Last login: <span id="last-login">Just now</span></p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card gradient-purple">
+                <div class="stat-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Total Points</h3>
+                    <p class="stat-value" id="total-points">0</p>
+                </div>
+                <div class="stat-trend">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+12%</span>
+                </div>
+            </div>
+            
+            <div class="stat-card gradient-cyan">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Tasks Done</h3>
+                    <p class="stat-value" id="tasks-done">0</p>
+                </div>
+                <div class="stat-trend">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+5</span>
+                </div>
+            </div>
+            
+            <div class="stat-card gradient-pink">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Referrals</h3>
+                    <p class="stat-value" id="referral-count">0</p>
+                </div>
+                <div class="stat-trend">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+2</span>
+                </div>
+            </div>
+            
+            <div class="stat-card gradient-green">
+                <div class="stat-icon">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Earned ($)</h3>
+                    <p class="stat-value" id="earned-usd">$0.00</p>
+                </div>
+                <div class="stat-trend">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+8%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dashboard-card glass">
+                <div class="card-header">
+                    <h2><i class="fas fa-chart-line"></i> Earnings Overview</h2>
+                </div>
+                <div class="earnings-chart">
+                    <div class="chart-bar" style="--height: 40%">
+                        <span class="bar-label">Mon</span>
+                        <div class="bar-fill"></div>
+                        <span class="bar-value">400</span>
+                    </div>
+                    <div class="chart-bar" style="--height: 65%">
+                        <span class="bar-label">Tue</span>
+                        <div class="bar-fill"></div>
+                        <span class="bar-value">650</span>
+                    </div>
+                    <div class="chart-bar" style="--height: 45%">
+                        <span class="bar-label">Wed</span>
+                        <div class="bar-fill"></div>
+                        <span class="bar-value">450</span>
+                    </div>
+                    <div class="chart-bar" style="--height: 80%">
+                        <span class="bar-label">Thu</span>
+                        <div class="bar-fill"></div>
+                        <span class="bar-value">800</span>
+                    </div>
+                    <div class="chart-bar" style="--height: 55%">
+                        <span class="bar-label">Fri</span>
+                        <div class="bar-fill"></div>
+                        <span class="bar-value">550</span>
+                    </div>
+                    <div class="chart-bar" style="--height: 90%">
+                        <span class="bar-label">Sat</span>
+                        <div class="bar-fill"></div>
+                        <span class="bar-value">900</span>
+                    </div>
+                    <div class="chart-bar" style="--height: 70%">
+                        <span class="bar-label">Sun</span>
+                        <div class="bar-fill"></div>
+                        <span class="bar-value">700</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card glass">
+                <div class="card-header">
+                    <h2><i class="fas fa-history"></i> Recent Activity</h2>
+                </div>
+                <div class="activity-list" id="activity-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-card glass withdraw-card">
+            <div class="card-header">
+                <h2><i class="fas fa-money-bill-wave"></i> Withdrawal History</h2>
+                <a href="withdraw.html" class="btn-sm">New Withdrawal</a>
+            </div>
+            <div class="withdrawal-table-container">
+                <table class="withdrawal-table" id="withdrawal-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Method</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="withdrawal-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+                <div class="empty-state hidden" id="no-withdrawals">
+                    <i class="fas fa-inbox"></i>
+                    <p>No withdrawals yet</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <a href="tasks.html" class="action-btn glass">
+                <i class="fas fa-tasks"></i>
+                <span>Complete Tasks</span>
+            </a>
+            <a href="withdraw.html" class="action-btn glass">
+                <i class="fas fa-wallet"></i>
+                <span>Withdraw</span>
+            </a>
+            <a href="referral.html" class="action-btn glass">
+                <i class="fas fa-share-alt"></i>
+                <span>Invite Friends</span>
+            </a>
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadDashboard();
+        });
+
+        function loadDashboard() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) return;
+
+            document.getElementById('user-name').textContent = user.name;
+            document.getElementById('nav-points').textContent = user.points;
+            document.getElementById('total-points').textContent = user.points.toLocaleString();
+            document.getElementById('earned-usd').textContent = '$' + (user.points / 1000).toFixed(2);
+
+            // Tasks done
+            const completed = JSON.parse(localStorage.getItem('completedTasks') || '[]')
+                .filter(t => t.userId === user.id).length;
+            document.getElementById('tasks-done').textContent = completed;
+
+            // Referrals
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const currentUserData = users.find(u => u.id === user.id);
+            const referralCount = currentUserData ? currentUserData.referrals.length : 0;
+            document.getElementById('referral-count').textContent = referralCount;
+
+            // Activity
+            loadActivity(user.id);
+            
+            // Withdrawals
+            loadWithdrawals(user.id);
+        }
+
+        function loadActivity(userId) {
+            const list = document.getElementById('activity-list');
+            const completed = JSON.parse(localStorage.getItem('completedTasks') || '[])
+                .filter(t => t.userId === userId)
+                .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+                .slice(0, 5);
+
+            if (completed.length === 0) {
+                list.innerHTML = '<div class="empty-item">No recent activity</div>';
+                return;
+            }
+
+            list.innerHTML = completed.map(task => `
+                <div class="activity-item">
+                    <div class="activity-icon success">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="activity-details">
+                        <p class="activity-title">Completed Task #${task.taskId}</p>
+                        <p class="activity-time">${timeAgo(task.completedAt)}</p>
+                    </div>
+                    <span class="activity-points">+100</span>
+                </div>
+            `).join('');
+        }
+
+        function loadWithdrawals(userId) {
+            const withdrawals = JSON.parse(localStorage.getItem('withdrawals') || '[])
+                .filter(w => w.userId === userId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const tbody = document.getElementById('withdrawal-body');
+            const emptyState = document.getElementById('no-withdrawals');
+
+            if (withdrawals.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = withdrawals.slice(0, 5).map(w => `
+                <tr>
+                    <td>${new Date(w.date).toLocaleDateString()}</td>
+                    <td><i class="fas fa-${getMethodIcon(w.method)}"></i> ${w.method}</td>
+                    <td>${w.points} pts ($${w.amount})</td>
+                    <td><span class="status-badge ${w.status}">${w.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function getMethodIcon(method) {
+            const icons = {
+                'PayPal': 'paypal',
+                'Crypto': 'bitcoin',
+                'Bank Transfer': 'university',
+                'Gift Card': 'gift'
+            };
+            return icons[method] || 'money-bill';
+        }
+
+        function timeAgo(date) {
+            const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+            if (seconds < 60) return 'Just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            return `${Math.floor(hours / 24)}d ago`;
+        }
+    </script>
+</body>
+</html>

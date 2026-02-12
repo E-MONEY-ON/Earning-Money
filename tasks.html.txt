@@ -1,0 +1,246 @@
+<!-- tasks.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasks - RewardHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-transition-overlay"></div>
+    
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fas fa-gift"></i>
+            <span>RewardHub</span>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="tasks.html" class="active">Tasks</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="withdraw.html">Withdraw</a>
+            <div class="user-menu">
+                <span class="user-points"><i class="fas fa-coins"></i> <span id="nav-points">0</span></span>
+                <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
+
+    <main class="page-content tasks-page">
+        <div class="page-header">
+            <h1>Available Tasks</h1>
+            <p>Complete tasks to earn points. Each task is worth <span class="highlight">100 points</span></p>
+        </div>
+
+        <div class="progress-overview glass">
+            <div class="progress-info">
+                <span>Today's Progress</span>
+                <span id="progress-text">0/10 Completed</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="daily-progress" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="tasks-grid" id="tasks-container">
+            <!-- Tasks populated by JS -->
+        </div>
+    </main>
+
+    <!-- Task Timer Modal -->
+    <div id="task-modal" class="modal">
+        <div class="modal-content glass task-modal-content">
+            <div class="timer-circle">
+                <svg class="timer-svg" viewBox="0 0 100 100">
+                    <circle class="timer-bg" cx="50" cy="50" r="45"></circle>
+                    <circle class="timer-progress" id="timer-circle" cx="50" cy="50" r="45"></circle>
+                </svg>
+                <div class="timer-text">
+                    <span id="timer-count">15</span>
+                    <small>seconds</small>
+                </div>
+            </div>
+            <p class="timer-instruction">Please stay on the task page. Timer running...</p>
+            <button onclick="cancelTask()" class="btn-outline">Cancel</button>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        const taskLinks = [
+            'https://omg10.com/4/10603352',
+            'https://omg10.com/4/10603351',
+            'https://omg10.com/4/10603350',
+            'https://omg10.com/4/10603349',
+            'https://omg10.com/4/10603348',
+            'https://omg10.com/4/10603347',
+            'https://omg10.com/4/10603346',
+            'https://omg10.com/4/10603356',
+            'https://omg10.com/4/10603375',
+            'https://omg10.com/4/10603358'
+        ];
+
+        let currentTaskId = null;
+        let taskTimer = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadTasks();
+            updateNavPoints();
+        });
+
+        function loadTasks() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const completed = JSON.parse(localStorage.getItem('completedTasks') || '[]')
+                .filter(t => t.userId === user.id);
+            
+            const container = document.getElementById('tasks-container');
+            const completedCount = completed.length;
+            
+            document.getElementById('progress-text').textContent = `${completedCount}/10 Completed`;
+            document.getElementById('daily-progress').style.width = `${(completedCount / 10) * 100}%`;
+
+            container.innerHTML = taskLinks.map((link, index) => {
+                const isCompleted = completed.some(t => t.taskId === index + 1);
+                return `
+                    <div class="task-card glass ${isCompleted ? 'completed' : ''}" data-task-id="${index + 1}">
+                        <div class="task-header">
+                            <div class="task-number">#${index + 1}</div>
+                            <div class="task-reward">
+                                <i class="fas fa-coins"></i>
+                                <span>100 pts</span>
+                            </div>
+                        </div>
+                        <div class="task-body">
+                            <h3>Quick Task ${index + 1}</h3>
+                            <p>Complete this simple online task to earn rewards</p>
+                        </div>
+                        <div class="task-footer">
+                            ${isCompleted ? `
+                                <div class="completed-badge">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Completed</span>
+                                </div>
+                            ` : `
+                                <button onclick="startTask(${index + 1}, '${link}')" class="btn-task">
+                                    <span>Start Task</span>
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function startTask(taskId, link) {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const completed = JSON.parse(localStorage.getItem('completedTasks') || '[]');
+            
+            if (completed.some(t => t.taskId === taskId && t.userId === user.id)) {
+                showToast('Task already completed!', 'error');
+                return;
+            }
+
+            currentTaskId = taskId;
+            
+            // Open link in new tab
+            window.open(link, '_blank');
+            
+            // Show timer modal
+            document.getElementById('task-modal').classList.add('active');
+            startCountdown();
+        }
+
+        function startCountdown() {
+            let seconds = 15;
+            const circle = document.getElementById('timer-circle');
+            const countEl = document.getElementById('timer-count');
+            const circumference = 2 * Math.PI * 45;
+            
+            circle.style.strokeDasharray = circumference;
+            
+            taskTimer = setInterval(() => {
+                seconds--;
+                countEl.textContent = seconds;
+                
+                const offset = circumference - (seconds / 15) * circumference;
+                circle.style.strokeDashoffset = offset;
+                
+                if (seconds <= 0) {
+                    clearInterval(taskTimer);
+                    completeTask();
+                }
+            }, 1000);
+        }
+
+        function cancelTask() {
+            clearInterval(taskTimer);
+            document.getElementById('task-modal').classList.remove('active');
+            currentTaskId = null;
+        }
+
+        function completeTask() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            
+            // Add points
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const userIndex = users.findIndex(u => u.id === user.id);
+            
+            if (userIndex !== -1) {
+                users[userIndex].points += 100;
+                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
+            }
+            
+            // Save completed task
+            const completed = JSON.parse(localStorage.getItem('completedTasks') || '[]');
+            completed.push({
+                userId: user.id,
+                taskId: currentTaskId,
+                completedAt: new Date().toISOString()
+            });
+            localStorage.setItem('completedTasks', JSON.stringify(completed));
+            
+            // Close modal
+            document.getElementById('task-modal').classList.remove('active');
+            
+            // Success effects
+            showToast('Task completed! +100 points', 'success');
+            fireConfetti();
+            updateNavPoints();
+            
+            // Refresh tasks
+            setTimeout(() => {
+                const card = document.querySelector(`[data-task-id="${currentTaskId}"]`);
+                card.classList.add('completed');
+                card.querySelector('.task-footer').innerHTML = `
+                    <div class="completed-badge">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Completed</span>
+                    </div>
+                `;
+                loadTasks();
+            }, 500);
+            
+            currentTaskId = null;
+        }
+
+        function updateNavPoints() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (user) {
+                document.getElementById('nav-points').textContent = user.points;
+            }
+        }
+    </script>
+</body>
+</html>

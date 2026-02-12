@@ -1,0 +1,293 @@
+<!-- withdraw.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdraw - RewardHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-transition-overlay"></div>
+    
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fas fa-gift"></i>
+            <span>RewardHub</span>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="tasks.html">Tasks</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="withdraw.html" class="active">Withdraw</a>
+            <div class="user-menu">
+                <span class="user-points"><i class="fas fa-coins"></i> <span id="nav-points">0</span></span>
+                <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
+
+    <main class="page-content withdraw-page">
+        <div class="page-header">
+            <h1>Withdraw Earnings</h1>
+            <p>Convert your points to real money</p>
+        </div>
+
+        <div class="withdraw-grid">
+            <div class="balance-card glass gradient-purple">
+                <h3>Available Balance</h3>
+                <div class="balance-amount">
+                    <span class="points" id="available-points">0</span>
+                    <span class="label">points</span>
+                </div>
+                <div class="balance-conversion">
+                    ≈ $<span id="available-usd">0.00</span> USD
+                </div>
+                <div class="conversion-rate">
+                    <i class="fas fa-info-circle"></i>
+                    1000 points = $1.00 USD
+                </div>
+            </div>
+
+            <div class="min-balance-card glass">
+                <h4>Minimum Withdrawal</h4>
+                <div class="min-amount">1000 points</div>
+                <div class="progress-to-min" id="progress-min">
+                    <div class="progress-fill" id="min-progress-fill"></div>
+                </div>
+                <p class="progress-text" id="min-progress-text">Need 1000 more points</p>
+            </div>
+        </div>
+
+        <div class="withdraw-form-container glass">
+            <h2><i class="fas fa-wallet"></i> Request Withdrawal</h2>
+            
+            <form id="withdraw-form" class="withdraw-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount (Points)</label>
+                        <input type="number" id="withdraw-amount" min="1000" step="100" required placeholder="Enter amount">
+                        <small class="input-hint">Min: 1000 | Max: <span id="max-withdraw">0</span></small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Payment Method</label>
+                        <div class="method-selector">
+                            <button type="button" class="method-btn active" data-method="PayPal" onclick="selectMethod(this)">
+                                <i class="fab fa-paypal"></i>
+                                <span>PayPal</span>
+                            </button>
+                            <button type="button" class="method-btn" data-method="Crypto" onclick="selectMethod(this)">
+                                <i fab fa-bitcoin"></i>
+                                <span>Crypto</span>
+                            </button>
+                            <button type="button" class="method-btn" data-method="Bank Transfer" onclick="selectMethod(this)">
+                                <i class="fas fa-university"></i>
+                                <span>Bank</span>
+                            </button>
+                            <button type="button" class="method-btn" data-method="Gift Card" onclick="selectMethod(this)">
+                                <i class="fas fa-gift"></i>
+                                <span>Gift Card</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="payment-details">
+                    <label id="detail-label">PayPal Email</label>
+                    <input type="text" id="payment-address" required placeholder="Enter your PayPal email">
+                </div>
+
+                <div class="withdraw-summary">
+                    <div class="summary-row">
+                        <span>Amount:</span>
+                        <span id="summary-points">0 points</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Fee (0%):</span>
+                        <span>$0.00</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>You Receive:</span>
+                        <span id="summary-usd">$0.00</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-glow btn-full" id="submit-withdraw">
+                    Request Withdrawal
+                </button>
+            </form>
+        </div>
+
+        <div class="withdraw-history glass">
+            <h3><i class="fas fa-history"></i> Withdrawal History</h3>
+            <div class="history-list" id="withdraw-history">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let selectedMethod = 'PayPal';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadWithdrawData();
+            
+            // Amount input listener
+            document.getElementById('withdraw-amount').addEventListener('input', updateSummary);
+            
+            // Form submission
+            document.getElementById('withdraw-form').addEventListener('submit', handleWithdraw);
+        });
+
+        function loadWithdrawData() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            document.getElementById('available-points').textContent = user.points.toLocaleString();
+            document.getElementById('available-usd').textContent = (user.points / 1000).toFixed(2);
+            document.getElementById('max-withdraw').textContent = user.points.toLocaleString();
+            document.getElementById('nav-points').textContent = user.points;
+
+            // Progress to min
+            const minPoints = 1000;
+            const progress = Math.min((user.points / minPoints) * 100, 100);
+            document.getElementById('min-progress-fill').style.width = `${progress}%`;
+            
+            if (user.points >= minPoints) {
+                document.getElementById('min-progress-text').textContent = 'Minimum reached! You can withdraw now.';
+                document.getElementById('min-progress-text').classList.add('success');
+            } else {
+                document.getElementById('min-progress-text').textContent = `Need ${minPoints - user.points} more points`;
+            }
+
+            // Load history
+            loadHistory(user.id);
+        }
+
+        function selectMethod(btn) {
+            document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedMethod = btn.dataset.method;
+            
+            const labels = {
+                'PayPal': 'PayPal Email',
+                'Crypto': 'Wallet Address',
+                'Bank Transfer': 'Bank Account Details',
+                'Gift Card': 'Gift Card Type & Email'
+            };
+            
+            document.getElementById('detail-label').textContent = labels[selectedMethod];
+            document.getElementById('payment-address').placeholder = `Enter your ${labels[selectedMethod]}`;
+        }
+
+        function updateSummary() {
+            const amount = parseInt(document.getElementById('withdraw-amount').value) || 0;
+            const usd = (amount / 1000).toFixed(2);
+            
+            document.getElementById('summary-points').textContent = `${amount.toLocaleString()} points`;
+            document.getElementById('summary-usd').textContent = `$${usd}`;
+        }
+
+        function handleWithdraw(e) {
+            e.preventDefault();
+            
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const amount = parseInt(document.getElementById('withdraw-amount').value);
+            const address = document.getElementById('payment-address').value.trim();
+            
+            if (amount < 1000) {
+                showToast('Minimum withdrawal is 1000 points', 'error');
+                return;
+            }
+            
+            if (amount > user.points) {
+                showToast('Insufficient points', 'error');
+                return;
+            }
+            
+            if (!address) {
+                showToast('Please enter payment details', 'error');
+                return;
+            }
+            
+            // Create withdrawal request
+            const withdrawals = JSON.parse(localStorage.getItem('withdrawals') || '[]');
+            withdrawals.push({
+                id: Date.now().toString(),
+                userId: user.id,
+                points: amount,
+                amount: (amount / 1000).toFixed(2),
+                method: selectedMethod,
+                address: address,
+                status: 'pending',
+                date: new Date().toISOString()
+            });
+            localStorage.setItem('withdrawals', JSON.stringify(withdrawals));
+            
+            // Deduct points
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const userIndex = users.findIndex(u => u.id === user.id);
+            users[userIndex].points -= amount;
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
+            
+            // Reset form
+            document.getElementById('withdraw-form').reset();
+            updateSummary();
+            
+            showToast('Withdrawal request submitted!', 'success');
+            fireConfetti();
+            loadWithdrawData();
+        }
+
+        function loadHistory(userId) {
+            const withdrawals = JSON.parse(localStorage.getItem('withdrawals') || '[])
+                .filter(w => w.userId === userId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const container = document.getElementById('withdraw-history');
+            
+            if (withdrawals.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No withdrawals yet</p></div>';
+                return;
+            }
+            
+            container.innerHTML = withdrawals.map(w => `
+                <div class="history-item">
+                    <div class="history-info">
+                        <div class="history-method">
+                            <i class="fas fa-${getMethodIcon(w.method)}"></i>
+                            <span>${w.method}</span>
+                        </div>
+                        <div class="history-date">${new Date(w.date).toLocaleDateString()}</div>
+                    </div>
+                    <div class="history-amount">
+                        <span class="points">-${w.points} pts</span>
+                        <span class="usd">$${w.amount}</span>
+                    </div>
+                    <span class="status-badge ${w.status}">${w.status}</span>
+                </div>
+            `).join('');
+        }
+
+        function getMethodIcon(method) {
+            const icons = {
+                'PayPal': 'paypal',
+                'Crypto': 'bitcoin',
+                'Bank Transfer': 'university',
+                'Gift Card': 'gift'
+            };
+            return icons[method] || 'money-bill';
+        }
+    </script>
+</body>
+</html>

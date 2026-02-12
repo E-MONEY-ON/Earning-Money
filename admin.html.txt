@@ -1,0 +1,444 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - RewardHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-transition-overlay"></div>
+    
+    <nav class="navbar admin-nav">
+        <div class="nav-brand">
+            <i class="fas fa-shield-alt"></i>
+            <span>Admin Panel</span>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">View Site</a>
+            <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </nav>
+
+    <main class="admin-page">
+        <div class="admin-sidebar">
+            <div class="admin-menu">
+                <button class="menu-item active" onclick="showSection('dashboard')">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="menu-item" onclick="showSection('users')">
+                    <i class="fas fa-users"></i>
+                    <span>Users</span>
+                </button>
+                <button class="menu-item" onclick="showSection('tasks')">
+                    <i class="fas fa-tasks"></i>
+                    <span>Tasks</span>
+                </button>
+                <button class="menu-item" onclick="showSection('withdrawals')">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Withdrawals</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="admin-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="admin-section active">
+                <h1>Platform Overview</h1>
+                
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <i class="fas fa-users"></i>
+                        <div class="stat-info">
+                            <h3>Total Users</h3>
+                            <p id="admin-total-users">0</p>
+                        </div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <i class="fas fa-coins"></i>
+                        <div class="stat-info">
+                            <h3>Total Points</h3>
+                            <p id="admin-total-points">0</p>
+                        </div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="stat-info">
+                            <h3>Tasks Completed</h3>
+                            <p id="admin-total-tasks">0</p>
+                        </div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <i class="fas fa-wallet"></i>
+                        <div class="stat-info">
+                            <h3>Pending Withdrawals</h3>
+                            <p id="admin-pending-withdrawals">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-charts">
+                    <div class="chart-card glass">
+                        <h3>Recent Activity</h3>
+                        <div class="activity-timeline" id="admin-activity">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="users-section" class="admin-section">
+                <div class="section-header">
+                    <h1>User Management</h1>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="user-search" placeholder="Search users..." onkeyup="searchUsers()">
+                    </div>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Points</th>
+                                <th>Referrals</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Tasks Section -->
+            <section id="tasks-section" class="admin-section">
+                <div class="section-header">
+                    <h1>Task Management</h1>
+                    <button onclick="openTaskModal()" class="btn-glow">
+                        <i class="fas fa-plus"></i> Add Task
+                    </button>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>URL</th>
+                                <th>Reward</th>
+                                <th>Completions</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tasks-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Withdrawals Section -->
+            <section id="withdrawals-section" class="admin-section">
+                <div class="section-header">
+                    <h1>Withdrawal Requests</h1>
+                    <div class="filter-tabs">
+                        <button class="tab-btn active" onclick="filterWithdrawals('all')">All</button>
+                        <button class="tab-btn" onclick="filterWithdrawals('pending')">Pending</button>
+                        <button class="tab-btn" onclick="filterWithdrawals('approved')">Approved</button>
+                        <button class="tab-btn" onclick="filterWithdrawals('rejected')">Rejected</button>
+                    </div>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Method</th>
+                                <th>Points</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="withdrawals-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Task Modal -->
+    <div id="task-modal" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2 id="task-modal-title">Add New Task</h2>
+                <button class="modal-close" onclick="closeTaskModal()">&times;</button>
+            </div>
+            <form id="task-form" class="modal-form">
+                <input type="hidden" id="task-id">
+                <div class="form-group">
+                    <label>Task URL</label>
+                    <input type="url" id="task-url" required placeholder="https://example.com">
+                </div>
+                <div class="form-group">
+                    <label>Reward Points</label>
+                    <input type="number" id="task-reward" value="100" min="1" required>
+                </div>
+                <button type="submit" class="btn-glow btn-full">Save Task</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let currentWithdrawalFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdmin();
+            loadAdminData();
+            
+            // Task form
+            document.getElementById('task-form').addEventListener('submit', handleTaskSubmit);
+        });
+
+        function checkAdmin() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user || !user.isAdmin) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        function showSection(section) {
+            // Update menu
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.menu-item').classList.add('active');
+            
+            // Update section
+            document.querySelectorAll('.admin-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(`${section}-section`).classList.add('active');
+            
+            // Load data
+            if (section === 'users') loadUsers();
+            if (section === 'tasks') loadAdminTasks();
+            if (section === 'withdrawals') loadWithdrawals();
+        }
+
+        function loadAdminData() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const completedTasks = JSON.parse(localStorage.getItem('completedTasks') || '[]');
+            const withdrawals = JSON.parse(localStorage.getItem('withdrawals') || '[]');
+            
+            // Stats
+            document.getElementById('admin-total-users').textContent = users.length;
+            document.getElementById('admin-total-points').textContent = users.reduce((a, b) => a + (b.points || 0), 0).toLocaleString();
+            document.getElementById('admin-total-tasks').textContent = completedTasks.length;
+            document.getElementById('admin-pending-withdrawals').textContent = withdrawals.filter(w => w.status === 'pending').length;
+            
+            // Activity
+            const recentActivity = [...completedTasks, ...withdrawals]
+                .sort((a, b) => new Date(b.completedAt || b.date) - new Date(a.completedAt || a.date))
+                .slice(0, 10);
+            
+            const activityContainer = document.getElementById('admin-activity');
+            activityContainer.innerHTML = recentActivity.map(item => `
+                <div class="timeline-item">
+                    <div class="timeline-icon ${item.taskId ? 'task' : 'withdrawal'}">
+                        <i class="fas fa-${item.taskId ? 'check' : 'money-bill'}"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <p>${item.taskId ? 'Task completed' : 'Withdrawal requested'}</p>
+                        <small>${new Date(item.completedAt || item.date).toLocaleString()}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadUsers() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const tbody = document.getElementById('users-table-body');
+            
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>#${user.id.slice(-6)}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.points.toLocaleString()}</td>
+                    <td>${(user.referrals || []).length}</td>
+                    <td>${new Date(user.joinedAt).toLocaleDateString()}</td>
+                    <td>
+                        <button onclick="editUser('${user.id}')" class="btn-icon"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteUser('${user.id}')" class="btn-icon delete"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function searchUsers() {
+            const query = document.getElementById('user-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#users-table-body tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        function deleteUser(userId) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            
+            let users = JSON.parse(localStorage.getItem('users') || '[]');
+            users = users.filter(u => u.id !== userId);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            loadUsers();
+            showToast('User deleted', 'success');
+        }
+
+        function loadAdminTasks() {
+            // For demo, we'll show the predefined tasks with completion counts
+            const taskLinks = [
+                'https://omg10.com/4/10603352',
+                'https://omg10.com/4/10603351',
+                'https://omg10.com/4/10603350',
+                'https://omg10.com/4/10603349',
+                'https://omg10.com/4/10603348',
+                'https://omg10.com/4/10603347',
+                'https://omg10.com/4/10603346',
+                'https://omg10.com/4/10603356',
+                'https://omg10.com/4/10603375',
+                'https://omg10.com/4/10603358'
+            ];
+            
+            const completedTasks = JSON.parse(localStorage.getItem('completedTasks') || '[]');
+            const tbody = document.getElementById('tasks-table-body');
+            
+            tbody.innerHTML = taskLinks.map((url, index) => {
+                const completions = completedTasks.filter(t => t.taskId === index + 1).length;
+                return `
+                    <tr>
+                        <td>#${index + 1}</td>
+                        <td class="url-cell">${url}</td>
+                        <td>100 pts</td>
+                        <td>${completions}</td>
+                        <td><span class="status-badge active">Active</span></td>
+                        <td>
+                            <button onclick="editTask(${index})" class="btn-icon"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteTask(${index})" class="btn-icon delete"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openTaskModal() {
+            document.getElementById('task-modal').classList.add('active');
+            document.getElementById('task-form').reset();
+            document.getElementById('task-id').value = '';
+            document.getElementById('task-modal-title').textContent = 'Add New Task';
+        }
+
+        function closeTaskModal() {
+            document.getElementById('task-modal').classList.remove('active');
+        }
+
+        function handleTaskSubmit(e) {
+            e.preventDefault();
+            // In real implementation, this would add to a tasks array
+            showToast('Task saved (demo mode)', 'success');
+            closeTaskModal();
+        }
+
+        function editTask(id) {
+            document.getElementById('task-modal').classList.add('active');
+            document.getElementById('task-modal-title').textContent = 'Edit Task';
+            // Populate form
+        }
+
+        function deleteTask(id) {
+            if (!confirm('Delete this task?')) return;
+            showToast('Task deleted (demo mode)', 'success');
+        }
+
+        function loadWithdrawals() {
+            const withdrawals = JSON.parse(localStorage.getItem('withdrawals') || '[]');
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const tbody = document.getElementById('withdrawals-table-body');
+            
+            let filtered = withdrawals;
+            if (currentWithdrawalFilter !== 'all') {
+                filtered = withdrawals.filter(w => w.status === currentWithdrawalFilter);
+            }
+            
+            tbody.innerHTML = filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).map(w => {
+                const user = users.find(u => u.id === w.userId);
+                return `
+                    <tr>
+                        <td>#${w.id.slice(-6)}</td>
+                        <td>${user ? user.name : 'Unknown'}</td>
+                        <td><i class="fas fa-${getMethodIcon(w.method)}"></i> ${w.method}</td>
+                        <td>${w.points}</td>
+                        <td>$${w.amount}</td>
+                        <td>${new Date(w.date).toLocaleDateString()}</td>
+                        <td><span class="status-badge ${w.status}">${w.status}</span></td>
+                        <td>
+                            ${w.status === 'pending' ? `
+                                <button onclick="updateWithdrawal('${w.id}', 'approved')" class="btn-icon success"><i class="fas fa-check"></i></button>
+                                <button onclick="updateWithdrawal('${w.id}', 'rejected')" class="btn-icon delete"><i class="fas fa-times"></i></button>
+                            ` : '<span>-</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterWithdrawals(status) {
+            currentWithdrawalFilter = status;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            loadWithdrawals();
+        }
+
+        function updateWithdrawal(id, status) {
+            let withdrawals = JSON.parse(localStorage.getItem('withdrawals') || '[]');
+            const index = withdrawals.findIndex(w => w.id === id);
+            
+            if (index !== -1) {
+                withdrawals[index].status = status;
+                localStorage.setItem('withdrawals', JSON.stringify(withdrawals));
+                loadWithdrawals();
+                showToast(`Withdrawal ${status}`, 'success');
+            }
+        }
+
+        function getMethodIcon(method) {
+            const icons = {
+                'PayPal': 'paypal',
+                'Crypto': 'bitcoin',
+                'Bank Transfer': 'university',
+                'Gift Card': 'gift'
+            };
+            return icons[method] || 'money-bill';
+        }
+    </script>
+</body>
+</html>S

@@ -1,0 +1,60 @@
+// js/auth.js
+// Authentication Functions
+
+function updateAuthUI() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    const authElements = document.querySelectorAll('.auth-only');
+    const guestElements = document.querySelectorAll('.guest-only');
+    
+    if (user) {
+        authElements.forEach(el => el.classList.remove('hidden'));
+        guestElements.forEach(el => el.classList.add('hidden'));
+        
+        // Update points display
+        const pointsEl = document.getElementById('nav-points');
+        if (pointsEl) {
+            pointsEl.textContent = user.points;
+        }
+    } else {
+        authElements.forEach(el => el.classList.add('hidden'));
+        guestElements.forEach(el => el.classList.remove('hidden'));
+    }
+}
+
+function checkAuth() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) {
+        window.location.href = 'login.html';
+        return false;
+    }
+    updateAuthUI();
+    return true;
+}
+
+function checkAdmin() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user || !user.isAdmin) {
+        window.location.href = 'login.html';
+        return false;
+    }
+    return true;
+}
+
+function logout() {
+    localStorage.removeItem('currentUser');
+    showToast('Logged out successfully', 'success');
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 500);
+}
+
+// Check referral on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    
+    if (refCode && window.location.pathname.includes('register.html')) {
+        // Store referral code for after registration
+        sessionStorage.setItem('pendingReferral', refCode);
+    }
+});
